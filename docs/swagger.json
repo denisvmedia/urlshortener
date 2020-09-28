@@ -1,0 +1,294 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is an example url-shortener server.",
+        "title": "URL Shortener Example",
+        "contact": {
+            "name": "API Support",
+            "url": "https://github.com/denisvmedia/urlshortener/issues",
+            "email": "ask@artprima.cz"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://github.com/denisvmedia/urlshortener/blob/master/LICENSE"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/api",
+    "paths": {
+        "/links": {
+            "get": {
+                "description": "get links",
+                "consumes": [
+                    "application/vnd.api+json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "List links",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Page number",
+                        "name": "page[number]",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Page size",
+                        "name": "page[size]",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/jsonapi.Links"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "add by link json",
+                "consumes": [
+                    "application/vnd.api+json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Create a new link",
+                "parameters": [
+                    {
+                        "description": "Add link",
+                        "name": "link",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/jsonapi.CreateLink"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/jsonapi.CreatedLink"
+                        }
+                    }
+                }
+            }
+        },
+        "/links/{id}": {
+            "get": {
+                "description": "get link by ID",
+                "consumes": [
+                    "application/vnd.api+json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Get a link",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Link ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/jsonapi.Link"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete by link ID",
+                "consumes": [
+                    "application/vnd.api+json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Delete a link",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Link ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {}
+                }
+            },
+            "patch": {
+                "description": "Update by link json",
+                "consumes": [
+                    "application/vnd.api+json"
+                ],
+                "produces": [
+                    "application/vnd.api+json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Update a link",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Link ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update link",
+                        "name": "account",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/jsonapi.CreateLink"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/jsonapi.CreatedLink"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "jsonapi.CreateLink": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "$ref": "#/definitions/jsonapi.Link"
+                }
+            }
+        },
+        "jsonapi.CreatedLink": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "$ref": "#/definitions/jsonapi.Link"
+                },
+                "meta": {
+                    "type": "object"
+                }
+            }
+        },
+        "jsonapi.Link": {
+            "type": "object",
+            "properties": {
+                "attributes": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.Link"
+                },
+                "id": {
+                    "description": "Object ID - this field is ignored for the new objects, and must match the url for the existing objects.",
+                    "type": "string",
+                    "example": "1"
+                },
+                "type": {
+                    "description": "JSON:API type",
+                    "type": "string",
+                    "example": "links"
+                }
+            }
+        },
+        "jsonapi.Links": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/jsonapi.Link"
+                    }
+                },
+                "links": {
+                    "type": "object",
+                    "properties": {
+                        "first": {
+                            "type": "string",
+                            "example": "/api/links?page[number]=1\u0026page[size]=10"
+                        },
+                        "last": {
+                            "type": "string",
+                            "example": "/api/links?page[number]=10\u0026page[size]=10"
+                        },
+                        "next": {
+                            "type": "string",
+                            "example": "/api/links?page[number]=1\u0026page[size]=10"
+                        },
+                        "prev": {
+                            "type": "string",
+                            "example": "/api/links?page[number]=1\u0026page[size]=10"
+                        }
+                    }
+                },
+                "meta": {
+                    "type": "object",
+                    "properties": {
+                        "links": {
+                            "type": "integer",
+                            "format": "int64",
+                            "example": 1
+                        }
+                    }
+                }
+            }
+        },
+        "model.Link": {
+            "type": "object",
+            "required": [
+                "originalUrl"
+            ],
+            "properties": {
+                "comment": {
+                    "description": "User comment",
+                    "type": "string",
+                    "example": "Free text comment"
+                },
+                "originalUrl": {
+                    "description": "Original URL where to redirect the visitor",
+                    "type": "string",
+                    "example": "https://example.com/my-cool-url-path"
+                },
+                "shortName": {
+                    "description": "Link short name as user requires, if empty will be generated, must be unique",
+                    "type": "string",
+                    "example": "link-short-name"
+                }
+            }
+        }
+    }
+}

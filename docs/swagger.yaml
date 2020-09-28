@@ -1,0 +1,200 @@
+basePath: /api
+definitions:
+  jsonapi.CreateLink:
+    properties:
+      data:
+        $ref: '#/definitions/jsonapi.Link'
+        type: object
+    type: object
+  jsonapi.CreatedLink:
+    properties:
+      data:
+        $ref: '#/definitions/jsonapi.Link'
+        type: object
+      meta:
+        type: object
+    type: object
+  jsonapi.Link:
+    properties:
+      attributes:
+        $ref: '#/definitions/model.Link'
+        type: object
+      id:
+        description: Object ID - this field is ignored for the new objects, and must match the url for the existing objects.
+        example: "1"
+        type: string
+      type:
+        description: JSON:API type
+        example: links
+        type: string
+    type: object
+  jsonapi.Links:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/jsonapi.Link'
+        type: array
+      links:
+        properties:
+          first:
+            example: /api/links?page[number]=1&page[size]=10
+            type: string
+          last:
+            example: /api/links?page[number]=10&page[size]=10
+            type: string
+          next:
+            example: /api/links?page[number]=1&page[size]=10
+            type: string
+          prev:
+            example: /api/links?page[number]=1&page[size]=10
+            type: string
+        type: object
+      meta:
+        properties:
+          links:
+            example: 1
+            format: int64
+            type: integer
+        type: object
+    type: object
+  model.Link:
+    properties:
+      comment:
+        description: User comment
+        example: Free text comment
+        type: string
+      originalUrl:
+        description: Original URL where to redirect the visitor
+        example: https://example.com/my-cool-url-path
+        type: string
+      shortName:
+        description: Link short name as user requires, if empty will be generated, must be unique
+        example: link-short-name
+        type: string
+    required:
+    - originalUrl
+    type: object
+info:
+  contact:
+    email: ask@artprima.cz
+    name: API Support
+    url: https://github.com/denisvmedia/urlshortener/issues
+  description: This is an example url-shortener server.
+  license:
+    name: MIT
+    url: https://github.com/denisvmedia/urlshortener/blob/master/LICENSE
+  title: URL Shortener Example
+  version: "1.0"
+paths:
+  /links:
+    get:
+      consumes:
+      - application/vnd.api+json
+      description: get links
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page[number]
+        type: integer
+      - default: 10
+        description: Page size
+        in: query
+        name: page[size]
+        type: integer
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/jsonapi.Links'
+      summary: List links
+      tags:
+      - links
+    post:
+      consumes:
+      - application/vnd.api+json
+      description: add by link json
+      parameters:
+      - description: Add link
+        in: body
+        name: link
+        required: true
+        schema:
+          $ref: '#/definitions/jsonapi.CreateLink'
+      produces:
+      - application/vnd.api+json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/jsonapi.CreatedLink'
+      summary: Create a new link
+      tags:
+      - links
+  /links/{id}:
+    delete:
+      consumes:
+      - application/vnd.api+json
+      description: Delete by link ID
+      parameters:
+      - description: Link ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/vnd.api+json
+      responses:
+        "204": {}
+      summary: Delete a link
+      tags:
+      - links
+    get:
+      consumes:
+      - application/vnd.api+json
+      description: get link by ID
+      parameters:
+      - description: Link ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/jsonapi.Link'
+      summary: Get a link
+      tags:
+      - links
+    patch:
+      consumes:
+      - application/vnd.api+json
+      description: Update by link json
+      parameters:
+      - description: Link ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update link
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/jsonapi.CreateLink'
+      produces:
+      - application/vnd.api+json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/jsonapi.CreatedLink'
+      summary: Update a link
+      tags:
+      - links
+swagger: "2.0"
