@@ -1,0 +1,54 @@
+version: "2.1"
+
+services:
+    shortener:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        restart: always
+        networks:
+            - shortener
+        container_name: shortener_app
+        environment:
+            STORAGE: mysql
+            MYSQL_HOST: mariadb
+            MYSQL_DBNAME: shortener_db
+            MYSQL_USER: shortener
+            MYSQL_PASSWORD: '12345678'
+        ports:
+            - "31456:8080"
+    mariadb:
+        image: mariadb:10.5.5
+        restart: always
+        networks:
+            - shortener
+        container_name: shortener_mariadb
+        environment:
+            MYSQL_ROOT_PASSWORD: '12345678'
+            MYSQL_USER: 'shortener'
+            MYSQL_PASSWORD: '12345678'
+            MYSQL_DATABASE: 'shortener_db'
+        volumes:
+            - mariadbdata:/var/lib/mysql
+#        ports:
+#            - "3307:3306"
+    shortener_init:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        networks:
+            - shortener
+        container_name: shortener_init
+        environment:
+            MYSQL_HOST: mariadb
+            MYSQL_DBNAME: shortener_db
+            MYSQL_USER: shortener
+            MYSQL_PASSWORD: '12345678'
+        tty: true
+        command: ['init-storage']
+networks:
+    shortener:
+        driver: bridge        
+volumes:
+    mariadbdata:
+        driver: local

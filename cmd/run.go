@@ -23,7 +23,7 @@ func RegisterRunCommand(parser *flags.Parser) *RunCommand {
 }
 
 type RunCommand struct {
-	BindAddress string `long:"bind-address" description:"http bind address" default:":31415" env:"BIND_ADDRESS"`
+	BindAddress string `long:"bind-address" description:"http bind address" default:":31456" env:"BIND_ADDRESS"`
 	Storage     string `long:"storage" description:"storage to use" choice:"mysql" choice:"inmemory" default:"inmemory" env:"STORAGE"`
 	Mysql
 }
