@@ -140,7 +140,7 @@ If you see this line, you are now storing your data in your DB and it will survi
 
 ## Application Usage
 
-After running the app, you can now access it using your browser. Let's navigate directly to the API documentation: http://localhost:31456 (assuming that you used the defaults in this document). It will look like this:
+After running the app, you can now access it using your browser. Let's navigate directly to the API documentation: http://localhost:31456/swagger/index.html (assuming that you used the defaults in this document). It will look like this:
 
 ![Image of Yaktocat](./.github/swagger.png)
 Yes, it's [Swagger](https://swagger.io/)! To bring this documentation on your table, Url Shortener uses [Swag](https://github.com/swaggo/swag) - a simple to use but extremely powerful tool that converts declarative comments from go source files to swagger files. And not just that, it also allows us to embed Swagger UI server into the application, and that's how the app exposes its API.
