@@ -142,7 +142,7 @@ If you see this line, you are now storing your data in your DB and it will survi
 
 After running the app, you can now access it using your browser. Let's navigate directly to the API documentation: http://localhost:31456 (assuming that you used the defaults in this document). It will look like this:
 
-![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png)
+![Image of Yaktocat](./.github/swagger.png)
 Yes, it's [Swagger](https://swagger.io/)! To bring this documentation on your table, Url Shortener uses [Swag](https://github.com/swaggo/swag) - a simple to use but extremely powerful tool that converts declarative comments from go source files to swagger files. And not just that, it also allows us to embed Swagger UI server into the application, and that's how the app exposes its API.
 
 > _Sidenote_. If you want to rebuild the Swagger docs, you'll need to install `swag` (check their repository for the docs) and then run:
