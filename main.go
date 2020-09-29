@@ -102,7 +102,7 @@ func main() {
 	})
 
 	fmt.Printf("Listening on :%d\n", port)
-	e.GET("/swagger/*any", echoSwagger.EchoWrapHandler())
+	e.GET("/swagger/*any", echoSwagger.EchoWrapHandler(echoSwagger.URL("/swagger/doc.json")))
 	e.GET("/*", shortener.Handler(linkStorage))
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", port)))
