@@ -10,12 +10,21 @@ const urlShortNameString = "^[a-zA-Z0-9\\-]+$"
 
 var urlShortNameRegex = regexp.MustCompile(urlShortNameString)
 
+var blackListedValuesString = "^(api|swagger|metrics)$"
+var blackListedValuesRegex = regexp.MustCompile(blackListedValuesString)
+
 // ValidateUrlShortName implements validator.Func
 func ValidateUrlShortName(fl validator.FieldLevel) bool {
 	v := fl.Field().String()
 	if v == "" {
 		return true
 	}
+
+	if blackListedValuesRegex.MatchString(v) {
+		// blacklisted value
+		return false
+	}
+
 	return urlShortNameRegex.MatchString(v)
 }
 

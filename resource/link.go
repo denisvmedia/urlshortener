@@ -1,23 +1,24 @@
 package resource
 
 import (
+	"github.com/denisvmedia/urlshortener/storage"
+	"github.com/denisvmedia/urlshortener/storage/linkstorage"
 	myvalidator "github.com/denisvmedia/urlshortener/validator"
 	"github.com/go-extras/errors"
 	"github.com/go-playground/validator/v10"
 	"net/http"
 
 	"github.com/denisvmedia/urlshortener/model"
-	"github.com/denisvmedia/urlshortener/storage"
 	"github.com/go-extras/api2go"
 )
 
 // LinkResource for api2go routes
 type LinkResource struct {
-	LinkStorage *storage.LinkStorage
+	LinkStorage linkstorage.Storage
 	validator   *validator.Validate
 }
 
-func NewLinkResource(linkStorage *storage.LinkStorage) *LinkResource {
+func NewLinkResource(linkStorage linkstorage.Storage) *LinkResource {
 	// Validator is not injected as a dependency, because it's actually an integral part of LinkResource
 	validate := validator.New()
 	err := validate.RegisterValidation("shortname", myvalidator.ValidateUrlShortName)
@@ -48,7 +49,10 @@ func NewLinkResource(linkStorage *storage.LinkStorage) *LinkResource {
 func (c *LinkResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 	pagination := parsePageArgs(r.QueryParams)
 
-	links, total := c.LinkStorage.PaginatedGetAll(pagination.Number, pagination.Size)
+	links, total, err := c.LinkStorage.PaginatedGetAll(pagination.Number, pagination.Size)
+	if err != nil {
+		return nil, HttpErrorPtrWithStatus(err, internalServerError)
+	}
 
 	result := &api2go.Response{
 		Res:  links,
@@ -74,7 +78,10 @@ func (c *LinkResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 func (c *LinkResource) FindOne(ID string, r api2go.Request) (api2go.Responder, error) {
 	res, err := c.LinkStorage.GetOne(ID)
 	if err != nil {
-		return nil, HttpErrorPtrWithStatus(err, resourceNotFound)
+		if err == storage.ErrNotFound {
+			return nil, HttpErrorPtrWithStatus(err, resourceNotFound)
+		}
+		return nil, HttpErrorPtrWithStatus(err, internalServerError)
 	}
 	return &Response{Res: res}, nil
 }

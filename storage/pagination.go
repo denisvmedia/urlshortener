@@ -1,6 +1,6 @@
 package storage
 
-func Paginate(pageNum int, pageSize int, sliceLength int) (start int, end int) {
+func SlicePaginate(pageNum int, pageSize int, sliceLength int) (start int, end int) {
 	start = pageNum * pageSize
 
 	if start > sliceLength {

@@ -1,7 +1,8 @@
 package shortener
 
 import (
-	"github.com/denisvmedia/urlshortener/storage"
+	"github.com/denisvmedia/urlshortener/metrics"
+	"github.com/denisvmedia/urlshortener/storage/linkstorage"
 	"net/http"
 	"strings"
 
@@ -52,15 +53,17 @@ const pageError = `
 </html>`
 
 // Handler Handle short link redirection
-func Handler(linkStorage *storage.LinkStorage) echo.HandlerFunc {
+func Handler(linkStorage linkstorage.Storage) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		shortName := strings.Trim(ctx.Param("*"), "/ ")
 		link, err := linkStorage.GetOneByShortName(shortName)
 		if err == nil {
+			metrics.RequestProcessed.WithLabelValues("301").Inc()
 			return ctx.Redirect(http.StatusMovedPermanently, link.OriginalUrl)
 		}
 
 		contentType := httputil.NegotiateContentType(ctx.Request(), []string{"text/plain", "text/html", "application/json", "application/vnd.api+json"}, "")
+		metrics.RequestProcessed.WithLabelValues("404").Inc()
 
 		switch contentType {
 		case "application/json", "application/vnd.api+json":

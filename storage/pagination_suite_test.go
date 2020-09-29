@@ -1,4 +1,4 @@
-package main_test
+package storage_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestUrlshortener(t *testing.T) {
+func TestRouting(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "UrlShortener Suite")
+	RunSpecs(t, "Storage Suite")
 }

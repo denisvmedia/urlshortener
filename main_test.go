@@ -4,25 +4,54 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/denisvmedia/urlshortener/cmd"
+	"github.com/denisvmedia/urlshortener/storage/linkstorage"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"sync"
+
 	"github.com/denisvmedia/urlshortener/model"
 	"github.com/denisvmedia/urlshortener/resource"
-	"github.com/denisvmedia/urlshortener/storage"
 	"github.com/go-extras/api2go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"net/http"
-	"net/http/httptest"
-	"sync"
 )
 
 var _ = Describe("Functional Tests", func() {
 	var api *api2go.API
-	var linkStorage *storage.LinkStorage
+	var linkStorage linkstorage.Storage
+	var dbData cmd.Mysql // a little bit ugly borrowing this structure from `cmd`, but it works...
 
 	BeforeEach(func() {
+		log.SetOutput(ioutil.Discard)
 		api = api2go.NewAPIWithBaseURL("api", "")
-		linkStorage = storage.NewLinkStorage()
+		if v, ok := os.LookupEnv("TEST_STORAGE"); ok && v == "mysql" {
+			dbData = cmd.Mysql{}
+			dbData.Host, ok = os.LookupEnv("MYSQL_HOST")
+			dbData.Name, ok = os.LookupEnv("MYSQL_DBNAME")
+			dbData.User, ok = os.LookupEnv("MYSQL_USER")
+			dbData.Password, ok = os.LookupEnv("MYSQL_PASSWORD")
+			err := dbData.Validate()
+			Expect(err).ToNot(HaveOccurred(), "all MYSQL_* env vars should be set in order to run tests using 'mysql' storage")
+			err = linkstorage.MysqlInitStorage(dbData.User, dbData.Password, dbData.Host, dbData.Name, true)
+			Expect(err).ToNot(HaveOccurred())
+			dbh, err := linkstorage.MysqlConnect(dbData.User, dbData.Password, dbData.Host, dbData.Name)
+			Expect(err).ToNot(HaveOccurred())
+			linkStorage = linkstorage.NewMysqlStorage(dbh)
+		} else {
+			linkStorage = linkstorage.NewInMemoryStorage()
+		}
 		api.AddResource(model.Link{}, resource.NewLinkResource(linkStorage))
+	})
+
+	AfterEach(func() {
+		if v, ok := os.LookupEnv("TEST_STORAGE"); ok && v == "mysql" {
+			err := linkstorage.MysqlDropDB(dbData.User, dbData.Password, dbData.Host, dbData.Name)
+			Expect(err).ToNot(HaveOccurred())
+		}
 	})
 
 	var jsonMustMarshal = func(v interface{}) []byte {
@@ -518,7 +547,8 @@ var _ = Describe("Functional Tests", func() {
 			var wg sync.WaitGroup
 			wg.Add(10)
 
-			items, _ := linkStorage.PaginatedGetAll(1, 10)
+			items, _, err := linkStorage.PaginatedGetAll(1, 10)
+			Expect(err).ToNot(HaveOccurred())
 			ids := make([]string, 0, len(items))
 			for _, item := range items {
 				ids = append(ids, item.ID)

@@ -1,32 +1,15 @@
-package storage
+package linkstorage
 
 import (
-	"encoding/base64"
 	"fmt"
-	"github.com/google/uuid"
+	"github.com/denisvmedia/urlshortener/storage"
 	"sort"
-	"strings"
 	"sync"
 	"sync/atomic"
 
 	"github.com/denisvmedia/urlshortener/model"
 	"github.com/go-extras/errors"
 )
-
-func generateShortName() string {
-	hash, _ := uuid.New().MarshalBinary()
-	var b strings.Builder
-	encoder := base64.NewEncoder(base64.URLEncoding, &b)
-	_, _ = encoder.Write(hash)
-	_ = encoder.Close()
-
-	res := strings.ReplaceAll(strings.Trim(b.String(), "_-=\n"), "_", "")
-	if len(res) > 8 {
-		res = res[:8]
-	}
-
-	return res
-}
 
 // sorting
 type byID []*model.Link
@@ -43,9 +26,9 @@ func (c byID) Less(i, j int) bool {
 	return c[i].GetID() < c[j].GetID()
 }
 
-// NewLinkStorage initializes the storage
-func NewLinkStorage() *LinkStorage {
-	return &LinkStorage{
+// NewInMemoryStorage initializes the storage
+func NewInMemoryStorage() Storage {
+	return &InMemoryStorage{
 		links:            make(map[string]*model.Link),
 		linksByShortName: make(map[string]*model.Link),
 		linksById:        make([]*model.Link, 0),
@@ -53,9 +36,9 @@ func NewLinkStorage() *LinkStorage {
 	}
 }
 
-// LinkStorage stores all of the links, needs to be injected into
+// InMemoryStorage stores all of the links, needs to be injected into
 // User and Link Resource. In the real world, you would use a database for that.
-type LinkStorage struct {
+type InMemoryStorage struct {
 	links            map[string]*model.Link
 	linksByShortName map[string]*model.Link
 	linksById        []*model.Link
@@ -64,18 +47,18 @@ type LinkStorage struct {
 }
 
 // GetAll of the links
-func (s *LinkStorage) PaginatedGetAll(pageNumber, pageSize int) (results []*model.Link, total int) {
+func (s *InMemoryStorage) PaginatedGetAll(pageNumber, pageSize int) (results []*model.Link, total int, err error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	start, end := Paginate(pageNumber-1, pageSize, len(s.linksById))
+	start, end := storage.SlicePaginate(pageNumber-1, pageSize, len(s.linksById))
 	results = s.linksById[start:end]
 
-	return results, len(s.linksById)
+	return results, len(s.linksById), nil
 }
 
 // GetOne link
-func (s *LinkStorage) GetOne(id string) (*model.Link, error) {
+func (s *InMemoryStorage) GetOne(id string) (*model.Link, error) {
 	s.lock.RLock()
 	link, ok := s.links[id]
 	s.lock.RUnlock()
@@ -83,23 +66,23 @@ func (s *LinkStorage) GetOne(id string) (*model.Link, error) {
 		return link, nil
 	}
 
-	return nil, errors.Wrapf(ErrNotFound, "Link for id %s not found", id)
+	return nil, errors.Wrapf(storage.ErrNotFound, "Link for id %s not found", id)
 }
 
 // GetOne link
-func (s *LinkStorage) GetOneByShortName(shortName string) (*model.Link, error) {
+func (s *InMemoryStorage) GetOneByShortName(shortName string) (*model.Link, error) {
 	s.lock.RLock()
 	link, ok := s.linksByShortName[shortName]
 	s.lock.RUnlock()
 	if !ok {
-		return nil, errors.Wrapf(ErrNotFound, "Link for shortName %s not found", shortName)
+		return nil, errors.Wrapf(storage.ErrNotFound, "Link for shortName %s not found", shortName)
 	}
 
 	return link, nil
 }
 
 // Insert a fresh one
-func (s *LinkStorage) Insert(c model.Link) (*model.Link, error) {
+func (s *InMemoryStorage) Insert(c model.Link) (*model.Link, error) {
 	atomic.AddInt64(&s.idCount, 1)
 	id := fmt.Sprintf("%d", atomic.LoadInt64(&s.idCount))
 	c.ID = id
@@ -111,7 +94,7 @@ func (s *LinkStorage) Insert(c model.Link) (*model.Link, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if lv, exists := s.linksByShortName[c.ShortName]; exists {
-		return nil, errors.Wrapf(ErrShortNameAlreadyExists, "Existing link id %s", lv.ID)
+		return lv, errors.Wrapf(storage.ErrShortNameAlreadyExists, "Existing link id %s", lv.ID)
 	}
 
 	s.linksByShortName[c.ShortName] = &c
@@ -129,13 +112,13 @@ func (s *LinkStorage) Insert(c model.Link) (*model.Link, error) {
 }
 
 // Delete one :(
-func (s *LinkStorage) Delete(id string) error {
+func (s *InMemoryStorage) Delete(id string) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	link, exists := s.links[id]
 	if !exists {
-		return errors.Wrapf(ErrNotFound, "Link for id %s not found", id)
+		return errors.Wrapf(storage.ErrNotFound, "Link for id %s not found", id)
 	}
 	delete(s.links, id)
 	delete(s.linksByShortName, link.ShortName)
@@ -151,7 +134,7 @@ func (s *LinkStorage) Delete(id string) error {
 }
 
 // Update updates an existing link
-func (s *LinkStorage) Update(c model.Link) error {
+func (s *InMemoryStorage) Update(c model.Link) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -161,10 +144,10 @@ func (s *LinkStorage) Update(c model.Link) error {
 
 	_, exists := s.links[c.ID]
 	if !exists {
-		return errors.Wrapf(ErrNotFound, "Link for id %s not found", c.ID)
+		return errors.Wrapf(storage.ErrNotFound, "Link for id %s not found", c.ID)
 	}
 	if existing, exists := s.linksByShortName[c.ShortName]; exists && existing.ShortName == c.ShortName {
-		return errors.Wrapf(ErrShortNameAlreadyExists, "Existing link id %s", existing.ID)
+		return errors.Wrapf(storage.ErrShortNameAlreadyExists, "Existing link id %s", existing.ID)
 	}
 	s.links[c.ID] = &c
 
