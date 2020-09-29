@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/google/uuid"
+	"sort"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -98,7 +99,7 @@ func (s *LinkStorage) GetOneByShortName(shortName string) (*model.Link, error) {
 }
 
 // Insert a fresh one
-func (s *LinkStorage) Insert(c model.Link) (string, error) {
+func (s *LinkStorage) Insert(c model.Link) (*model.Link, error) {
 	atomic.AddInt64(&s.idCount, 1)
 	id := fmt.Sprintf("%d", atomic.LoadInt64(&s.idCount))
 	c.ID = id
@@ -110,7 +111,7 @@ func (s *LinkStorage) Insert(c model.Link) (string, error) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if lv, exists := s.linksByShortName[c.ShortName]; exists {
-		return "", errors.Wrapf(ErrShortNameAlreadyExists, "Existing link id %s", lv.ID)
+		return nil, errors.Wrapf(ErrShortNameAlreadyExists, "Existing link id %s", lv.ID)
 	}
 
 	s.linksByShortName[c.ShortName] = &c
@@ -124,7 +125,7 @@ func (s *LinkStorage) Insert(c model.Link) (string, error) {
 	//}
 	//sort.Sort(byID(s.linksById))
 
-	return id, nil
+	return &c, nil
 }
 
 // Delete one :(
@@ -132,11 +133,19 @@ func (s *LinkStorage) Delete(id string) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	_, exists := s.links[id]
+	link, exists := s.links[id]
 	if !exists {
 		return errors.Wrapf(ErrNotFound, "Link for id %s not found", id)
 	}
 	delete(s.links, id)
+	delete(s.linksByShortName, link.ShortName)
+
+	// the following is kinda heavy operation, but unavoidable (well, a possible option would be storing the order index as well, and then deleting this item only by a slice trick, but we don't store the item id in the slice)
+	s.linksById = make([]*model.Link, 0, len(s.links))
+	for key := range s.links {
+		s.linksById = append(s.linksById, s.links[key])
+	}
+	sort.Sort(byID(s.linksById))
 
 	return nil
 }
@@ -154,8 +163,8 @@ func (s *LinkStorage) Update(c model.Link) error {
 	if !exists {
 		return errors.Wrapf(ErrNotFound, "Link for id %s not found", c.ID)
 	}
-	if lv, exists := s.linksByShortName[c.ShortName]; exists && lv.ShortName != c.ShortName {
-		return errors.Wrapf(ErrShortNameAlreadyExists, "Existing link id %s", lv.ID)
+	if existing, exists := s.linksByShortName[c.ShortName]; exists && existing.ShortName == c.ShortName {
+		return errors.Wrapf(ErrShortNameAlreadyExists, "Existing link id %s", existing.ID)
 	}
 	s.links[c.ID] = &c
 

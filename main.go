@@ -48,9 +48,7 @@ import (
 	"github.com/denisvmedia/urlshortener/routing"
 	"github.com/denisvmedia/urlshortener/shortener"
 	"github.com/denisvmedia/urlshortener/storage"
-	myvalidator "github.com/denisvmedia/urlshortener/validator"
 	"github.com/go-extras/api2go"
-	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 
@@ -86,20 +84,8 @@ func main() {
 		routing.Echo(e),
 	)
 
-	validate := validator.New()
-	err := validate.RegisterValidation("shortname", myvalidator.ValidateUrlShortName)
-	if err != nil {
-		panic(err) // this should never happen
-	}
-	err = validate.RegisterValidation("urlscheme", myvalidator.ValidateUrlScheme)
-	if err != nil {
-		panic(err) // this should never happen
-	}
 	linkStorage := storage.NewLinkStorage()
-	api.AddResource(model.Link{}, resource.LinkResource{
-		LinkStorage: linkStorage,
-		Validator:   validate,
-	})
+	api.AddResource(model.Link{}, resource.NewLinkResource(linkStorage))
 
 	fmt.Printf("Listening on :%d\n", port)
 	e.GET("/swagger/*any", echoSwagger.EchoWrapHandler(echoSwagger.URL("/swagger/doc.json")))

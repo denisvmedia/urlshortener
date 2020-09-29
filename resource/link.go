@@ -1,6 +1,7 @@
 package resource
 
 import (
+	myvalidator "github.com/denisvmedia/urlshortener/validator"
 	"github.com/go-extras/errors"
 	"github.com/go-playground/validator/v10"
 	"net/http"
@@ -13,7 +14,25 @@ import (
 // LinkResource for api2go routes
 type LinkResource struct {
 	LinkStorage *storage.LinkStorage
-	Validator   *validator.Validate
+	validator   *validator.Validate
+}
+
+func NewLinkResource(linkStorage *storage.LinkStorage) *LinkResource {
+	// Validator is not injected as a dependency, because it's actually an integral part of LinkResource
+	validate := validator.New()
+	err := validate.RegisterValidation("shortname", myvalidator.ValidateUrlShortName)
+	if err != nil {
+		panic(err) // this should never happen
+	}
+	err = validate.RegisterValidation("urlscheme", myvalidator.ValidateUrlScheme)
+	if err != nil {
+		panic(err) // this should never happen
+	}
+
+	return &LinkResource{
+		LinkStorage: linkStorage,
+		validator:   validate,
+	}
 }
 
 // FindAll links
@@ -26,7 +45,7 @@ type LinkResource struct {
 // @Param page[size] query int false "Page size" default(10) maximum(1000)
 // @Success 200 {object} jsonapi.Links
 // @Router /links [get]
-func (c LinkResource) FindAll(r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 	pagination := parsePageArgs(r.QueryParams)
 
 	links, total := c.LinkStorage.PaginatedGetAll(pagination.Number, pagination.Size)
@@ -52,7 +71,7 @@ func (c LinkResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 // @Param id path string true "Link ID"
 // @Success 200 {object} jsonapi.Link
 // @Router /links/{id} [get]
-func (c LinkResource) FindOne(ID string, r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) FindOne(ID string, r api2go.Request) (api2go.Responder, error) {
 	res, err := c.LinkStorage.GetOne(ID)
 	if err != nil {
 		return nil, HttpErrorPtrWithStatus(err, resourceNotFound)
@@ -69,22 +88,21 @@ func (c LinkResource) FindOne(ID string, r api2go.Request) (api2go.Responder, er
 // @Param link body jsonapi.CreateLink true "Add link"
 // @Success 201 {object} jsonapi.CreatedLink
 // @Router /links [post]
-func (c LinkResource) Create(obj interface{}, r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) Create(obj interface{}, r api2go.Request) (api2go.Responder, error) {
 	link, ok := obj.(model.Link)
 	if !ok {
 		return nil, HttpErrorPtrWithStatus(errors.New("Invalid instance given"), "")
 	}
 
-	if err := c.Validator.Struct(link); err != nil {
+	if err := c.validator.Struct(link); err != nil {
 		return nil, HttpErrorPtrWithStatus(err, validationError)
 	}
 
-	id, err := c.LinkStorage.Insert(link)
+	newLink, err := c.LinkStorage.Insert(link)
 	if err != nil {
 		return nil, HttpErrorPtrWithStatus(err, errors.Cause(err).Error())
 	}
-	link.ID = id
-	return &Response{Res: link, Code: http.StatusCreated}, nil
+	return &Response{Res: newLink, Code: http.StatusCreated}, nil
 }
 
 // Delete a link :(
@@ -96,7 +114,7 @@ func (c LinkResource) Create(obj interface{}, r api2go.Request) (api2go.Responde
 // @Param  id path int true "Link ID"
 // @Success 204
 // @Router /links/{id} [delete]
-func (c LinkResource) Delete(id string, r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) Delete(id string, r api2go.Request) (api2go.Responder, error) {
 	err := c.LinkStorage.Delete(id)
 	if err != nil {
 		return nil, HttpErrorPtrWithStatus(err, resourceNotFound)
@@ -114,13 +132,18 @@ func (c LinkResource) Delete(id string, r api2go.Request) (api2go.Responder, err
 // @Param  account body jsonapi.CreateLink true "Update link"
 // @Success 200 {object} jsonapi.CreatedLink
 // @Router /links/{id} [patch]
-func (c LinkResource) Update(obj interface{}, r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) Update(obj interface{}, r api2go.Request) (api2go.Responder, error) {
 	link, ok := obj.(model.Link)
 	if !ok {
-		return nil, HttpErrorPtrWithStatus(errors.New("Invalid instance given"), "")
+		var linkPtr *model.Link
+		linkPtr, ok = obj.(*model.Link)
+		if !ok {
+			return nil, HttpErrorPtrWithStatus(errors.New("Invalid instance given"), "")
+		}
+		link = *linkPtr
 	}
 
-	if err := c.Validator.Struct(link); err != nil {
+	if err := c.validator.Struct(link); err != nil {
 		return nil, HttpErrorPtrWithStatus(err, validationError)
 	}
 
