@@ -34,14 +34,17 @@ jobs:
     - name: Install ginkgo
       run: go get github.com/onsi/ginkgo/ginkgo
 
-    - name: Test
+    - name: Test with In-Memory Storage
+      run: ginkgo -race -progress -r
+
+    - name: Test with MariaDB Storage
       env:
         TEST_STORAGE: mysql
         MYSQL_HOST: 127.0.0.1:32574
         MYSQL_DBNAME: shortener_db
         MYSQL_USER: root
         MYSQL_PASSWORD: '12345678'
-      run: ginkgo -race -progress ./...
+      run: ginkgo -race -progress -r
 
   build:
     name: Build
