@@ -193,6 +193,8 @@ This app lacks some functionality.
   - This app is just a demo of API, so UI is not a part of this project. But it's easy to add it. My favorite would be [Vue.js](https://vuejs.org/).
 - Documentation is brief and lacks some parts.
 - Not all parts of the code are covered by tests.
+- Linter could be used to find code issues
+- Static analysys could be used as well
 
 ## Credits
 
