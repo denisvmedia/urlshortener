@@ -103,7 +103,7 @@ var _ = Describe("Functional Tests", func() {
 				/* 9 */ "example.com",
 			}
 			for id, value := range validValues {
-				By(fmt.Sprintf("should BOT accept invalid value #%d", id))
+				By(fmt.Sprintf("should NOT accept invalid value #%d", id))
 				err := validate.Var(value, "urlscheme")
 				Expect(err).To(HaveOccurred(), "should NOT have accepted invalid value #%s", id)
 			}
