@@ -123,7 +123,9 @@ func (s *InMemoryStorage) Delete(id string) error {
 	delete(s.links, id)
 	delete(s.linksByShortName, link.ShortName)
 
-	// the following is kinda heavy operation, but unavoidable (well, a possible option would be storing the order index as well, and then deleting this item only by a slice trick, but we don't store the item id in the slice)
+	// The following is kinda heavy operation, but unavoidable (well, a possible option
+	// would be storing the order index as well, and then deleting this item only by
+	// a slice trick, but we don't store the item id in the slice).
 	s.linksById = make([]*model.Link, 0, len(s.links))
 	for key := range s.links {
 		s.linksById = append(s.linksById, s.links[key])
