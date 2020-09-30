@@ -7,10 +7,9 @@ import (
 )
 
 const urlShortNameString = "^[a-zA-Z0-9\\-]+$"
+const blackListedValuesString = "^(api|swagger|metrics)$"
 
 var urlShortNameRegex = regexp.MustCompile(urlShortNameString)
-
-var blackListedValuesString = "^(api|swagger|metrics)$"
 var blackListedValuesRegex = regexp.MustCompile(blackListedValuesString)
 
 // ValidateUrlShortName implements validator.Func
