@@ -9,7 +9,7 @@ To build this application you'll need Go (version 1.15 or newer). If you don't h
 
 To run this application in Docker, you'll need to have Docker installed. If you don't have it yet, visit its [official web](https://docs.docker.com/get-docker/) for the installation instructions. On some systems you may still miss an additional tool - Docker Compose. To install it, visit [this page](https://docs.docker.com/compose/install/).
 
-You can also run this application without a docker (_any operating system will work where golang is supported_). But if you want to use a database as a storage engine, you'll need to install either [MariaDB](https://mariadb.com/kb/en/getting-installing-and-upgrading-mariadb/) or [MySQL](https://dev.mysql.com/doc/mysql-installation-excerpt/5.7/en/) (the second option is untested however).
+You can also run this application without Docker (_any operating system will work where golang is supported_). But if you want to use a database as a storage engine, you'll need to install either [MariaDB](https://mariadb.com/kb/en/getting-installing-and-upgrading-mariadb/) or [MySQL](https://dev.mysql.com/doc/mysql-installation-excerpt/5.7/en/) (the second option is untested however).
 
 ## Compiling
 
