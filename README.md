@@ -97,7 +97,7 @@ bash destroy.sh
 
 ### Without Docker
 
-Without using Docker you have to options how to run the app: you can either use an in-memory storage (that only exists during the program execution) or a real database - MySQL or MariaDB. It's up to you which option to choose.
+Without using Docker you have two options how to run the app: you can either use an in-memory storage (that only exists during the program execution) or a real database - MySQL or MariaDB. It's up to you which option to choose.
 
 #### Using In-Memory Storage
 
