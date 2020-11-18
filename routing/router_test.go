@@ -81,7 +81,7 @@ var _ = Describe("api2go with echo router adapter", func() {
 			Expect(err).To(BeNil())
 			e.ServeHTTP(rec, req)
 			Expect(rec.Code).To(Equal(http.StatusOK))
-			Expect(string(rec.Body.Bytes())).To(MatchJSON((expectedUser)))
+			Expect(rec.Body.String()).To(MatchJSON((expectedUser)))
 		})
 
 		It("can call handle", func() {
@@ -123,7 +123,7 @@ var _ = Describe("api2go with echo router adapter", func() {
 			Expect(err).To(BeNil())
 			e.ServeHTTP(rec, req)
 			Expect(rec.Code).To(Equal(http.StatusOK))
-			Expect(string(rec.Body.Bytes())).To(MatchJSON((expectedUser)))
+			Expect(rec.Body.String()).To(MatchJSON((expectedUser)))
 		})
 
 		It("will delete her", func() {
@@ -139,7 +139,7 @@ var _ = Describe("api2go with echo router adapter", func() {
 			Expect(err).To(BeNil())
 			e.ServeHTTP(rec, req)
 			Expect(rec.Code).To(Equal(http.StatusNotFound))
-			Expect(string(rec.Body.Bytes())).To(MatchJSON(expected))
+			Expect(rec.Body.String()).To(MatchJSON(expected))
 		})
 	})
 })
