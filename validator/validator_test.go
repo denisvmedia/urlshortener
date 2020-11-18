@@ -10,12 +10,12 @@ import (
 )
 
 var _ = Describe("Functional Tests", func() {
-	Context("ValidateUrlShortName", func() {
+	Context("ValidateURLShortName", func() {
 		var validate *validator.Validate
 
 		BeforeEach(func() {
 			validate = validator.New()
-			err := validate.RegisterValidation("shortname", ValidateUrlShortName)
+			err := validate.RegisterValidation("shortname", ValidateURLShortName)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -69,12 +69,12 @@ var _ = Describe("Functional Tests", func() {
 		})
 	})
 
-	Context("ValidateUrlScheme", func() {
+	Context("ValidateURLScheme", func() {
 		var validate *validator.Validate
 
 		BeforeEach(func() {
 			validate = validator.New()
-			err := validate.RegisterValidation("urlscheme", ValidateUrlScheme)
+			err := validate.RegisterValidation("urlscheme", ValidateURLScheme)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

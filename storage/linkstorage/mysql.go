@@ -2,22 +2,25 @@ package linkstorage
 
 import (
 	"fmt"
+	"time"
+
+	// load mysql driver
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/denisvmedia/urlshortener/model"
 	"github.com/denisvmedia/urlshortener/storage"
 	"github.com/go-extras/errors"
-	_ "github.com/go-sql-driver/mysql"
-	"time"
-
 	"github.com/jmoiron/sqlx"
 )
 
-// NewMysqlStorage initializes the storage
+// NewMysqlStorage initializes the MySQL storage
 func NewMysqlStorage(db *sqlx.DB) Storage {
 	return &MysqlStorage{
 		db: db,
 	}
 }
 
+// NewMysqlStorage defines a storage implementation that uses MySQL
 type MysqlStorage struct {
 	db *sqlx.DB
 }
@@ -47,6 +50,7 @@ func (m *MysqlStorage) countAll() (count int, err error) {
 	return count, nil
 }
 
+// PaginatedGetAll returns a slice of links according to desired pagination and total number of items
 func (m *MysqlStorage) PaginatedGetAll(pageNumber, pageSize int) (results []*model.Link, total int, err error) {
 	offset := (pageNumber - 1) * pageSize
 	limit := pageSize
@@ -71,8 +75,8 @@ func (m *MysqlStorage) PaginatedGetAll(pageNumber, pageSize int) (results []*mod
 
 	for rows.Next() {
 		var idNew int
-		var shortNameNew, originalUrl, comment string
-		err = rows.Scan(&idNew, &shortNameNew, &originalUrl, &comment)
+		var shortNameNew, originalURL, comment string
+		err = rows.Scan(&idNew, &shortNameNew, &originalURL, &comment)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -80,7 +84,7 @@ func (m *MysqlStorage) PaginatedGetAll(pageNumber, pageSize int) (results []*mod
 		results = append(results, &model.Link{
 			ID:          fmt.Sprint(idNew),
 			ShortName:   shortNameNew,
-			OriginalURL: originalUrl,
+			OriginalURL: originalURL,
 			Comment:     comment,
 		})
 	}
@@ -88,6 +92,7 @@ func (m *MysqlStorage) PaginatedGetAll(pageNumber, pageSize int) (results []*mod
 	return results, cnt, nil
 }
 
+// GetOne link
 func (m *MysqlStorage) GetOne(id string) (*model.Link, error) {
 	query := "SELECT id, short_name, original_url, comment FROM links WHERE id=?"
 	stmt, err := m.db.Prepare(query)
@@ -121,6 +126,7 @@ func (m *MysqlStorage) GetOne(id string) (*model.Link, error) {
 	}, nil
 }
 
+// GetOneByShortName returns a link byt its short name
 func (m *MysqlStorage) GetOneByShortName(shortName string) (*model.Link, error) {
 	query := "SELECT id, short_name, original_url, comment FROM links WHERE short_name=?"
 	stmt, err := m.db.Prepare(query)
@@ -154,6 +160,7 @@ func (m *MysqlStorage) GetOneByShortName(shortName string) (*model.Link, error) 
 	}, nil
 }
 
+// Insert a fresh one
 func (m *MysqlStorage) Insert(c model.Link) (*model.Link, error) {
 	existing, err := m.GetOneByShortName(c.ShortName)
 	if err != nil && err != storage.ErrNotFound {
@@ -186,6 +193,7 @@ func (m *MysqlStorage) Insert(c model.Link) (*model.Link, error) {
 	return &c, nil
 }
 
+// Delete one :(
 func (m *MysqlStorage) Delete(id string) error {
 	query := "DELETE FROM links WHERE id = ?"
 	stmt, err := m.db.Prepare(query)
@@ -207,6 +215,7 @@ func (m *MysqlStorage) Delete(id string) error {
 	return nil
 }
 
+// Update updates an existing link
 func (m *MysqlStorage) Update(c model.Link) error {
 	_, err := m.GetOne(c.ID)
 	if err != nil {
@@ -262,12 +271,14 @@ func mysqlCreateDB(dbUser, dbPassword, dbHost, dbName string) error {
 	return nil
 }
 
+// MysqlConnect creates mysql connection
 func MysqlConnect(dbUser, dbPassword, dbHost, dbName string) (*sqlx.DB, error) {
 	return sqlx.Connect("mysql",
 		fmt.Sprintf("%s:%s@(%s)/%s?parseTime=true",
 			dbUser, dbPassword, dbHost, dbName))
 }
 
+// MysqlInitStorage initializes MySQL storage by creating the database (optionally) and the tables
 func MysqlInitStorage(dbUser, dbPassword, dbHost, dbName string, createDb bool) error {
 	if createDb {
 		err := mysqlCreateDB(dbUser, dbPassword, dbHost, dbName)
@@ -299,6 +310,7 @@ func MysqlInitStorage(dbUser, dbPassword, dbHost, dbName string, createDb bool) 
 	return nil
 }
 
+// MysqlDropDB drops the application database
 func MysqlDropDB(dbUser, dbPassword, dbHost, dbName string) error {
 	dbh, err := sqlx.Connect("mysql",
 		fmt.Sprintf("%s:%s@(%s)/?parseTime=true",
@@ -306,7 +318,9 @@ func MysqlDropDB(dbUser, dbPassword, dbHost, dbName string) error {
 	if err != nil {
 		return err
 	}
-	defer dbh.Close()
+	defer func() {
+		_ = dbh.Close()
+	}()
 
 	_, err = dbh.Queryx("DROP DATABASE IF EXISTS " + dbName)
 	if err != nil {

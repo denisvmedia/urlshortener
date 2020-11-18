@@ -32,10 +32,10 @@ func StatusByError(err error) int {
 	return status
 }
 
-// HttpErrorPtr makes an *api2go.HTTPError by the given function arguments,
+// HTTPErrorPtr makes an *api2go.HTTPError by the given function arguments,
 // where err is an error that had occurred, msg is a text that you might want to show to the visitor,
 // status is a http status you want to return along with the error message
-func HttpErrorPtr(err error, msg string, status int) *api2go.HTTPError {
+func HTTPErrorPtr(err error, msg string, status int) *api2go.HTTPError {
 	if status == 500 {
 		msg = internalServerError
 	}
@@ -53,8 +53,8 @@ func HttpErrorPtr(err error, msg string, status int) *api2go.HTTPError {
 	return &tmp
 }
 
-// HttpErrorPtrWithStatus is a shortcut to HttpErrorPtr that uses
+// HTTPErrorPtrWithStatus is a shortcut to HTTPErrorPtr that uses
 // StatusByError for the given error to define the http status
-func HttpErrorPtrWithStatus(err error, msg string) *api2go.HTTPError {
-	return HttpErrorPtr(err, msg, StatusByError(err))
+func HTTPErrorPtrWithStatus(err error, msg string) *api2go.HTTPError {
+	return HTTPErrorPtr(err, msg, StatusByError(err))
 }

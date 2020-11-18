@@ -31,7 +31,7 @@ func NewInMemoryStorage() Storage {
 	return &InMemoryStorage{
 		links:            make(map[string]*model.Link),
 		linksByShortName: make(map[string]*model.Link),
-		linksById:        make([]*model.Link, 0),
+		linksByID:        make([]*model.Link, 0),
 		idCount:          0,
 	}
 }
@@ -41,20 +41,20 @@ func NewInMemoryStorage() Storage {
 type InMemoryStorage struct {
 	links            map[string]*model.Link
 	linksByShortName map[string]*model.Link
-	linksById        []*model.Link
+	linksByID        []*model.Link
 	idCount          int64
 	lock             sync.RWMutex
 }
 
-// GetAll of the links
+// PaginatedGetAll returns a slice of links according to desired pagination and total number of items
 func (s *InMemoryStorage) PaginatedGetAll(pageNumber, pageSize int) (results []*model.Link, total int, err error) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	start, end := storage.SlicePaginate(pageNumber-1, pageSize, len(s.linksById))
-	results = s.linksById[start:end]
+	start, end := storage.SlicePaginate(pageNumber-1, pageSize, len(s.linksByID))
+	results = s.linksByID[start:end]
 
-	return results, len(s.linksById), nil
+	return results, len(s.linksByID), nil
 }
 
 // GetOne link
@@ -69,7 +69,7 @@ func (s *InMemoryStorage) GetOne(id string) (*model.Link, error) {
 	return nil, errors.Wrapf(storage.ErrNotFound, "Link for id %s not found", id)
 }
 
-// GetOne link
+// GetOneByShortName returns a link byt its short name
 func (s *InMemoryStorage) GetOneByShortName(shortName string) (*model.Link, error) {
 	s.lock.RLock()
 	link, ok := s.linksByShortName[shortName]
@@ -95,14 +95,14 @@ func (s *InMemoryStorage) Insert(c model.Link) (*model.Link, error) {
 
 	s.linksByShortName[c.ShortName] = &c
 	s.links[id] = &c
-	s.linksById = append(s.linksById, &c)
+	s.linksByID = append(s.linksByID, &c)
 
 	//// the following code is commented out assuming that we always get the most recent id (although there's a slight chance to have it inaccurate)
-	//s.linksById = make([]*model.Link, 0, len(s.links))
+	//s.linksByID = make([]*model.Link, 0, len(s.links))
 	//for key := range s.links {
-	//	s.linksById = append(s.linksById, s.links[key])
+	//	s.linksByID = append(s.linksByID, s.links[key])
 	//}
-	//sort.Sort(byID(s.linksById))
+	//sort.Sort(byID(s.linksByID))
 
 	return &c, nil
 }
@@ -122,11 +122,11 @@ func (s *InMemoryStorage) Delete(id string) error {
 	// The following is kinda heavy operation, but unavoidable (well, a possible option
 	// would be storing the order index as well, and then deleting this item only by
 	// a slice trick, but we don't store the item id in the slice).
-	s.linksById = make([]*model.Link, 0, len(s.links))
+	s.linksByID = make([]*model.Link, 0, len(s.links))
 	for key := range s.links {
-		s.linksById = append(s.linksById, s.links[key])
+		s.linksByID = append(s.linksByID, s.links[key])
 	}
-	sort.Sort(byID(s.linksById))
+	sort.Sort(byID(s.linksByID))
 
 	return nil
 }
