@@ -33,11 +33,15 @@ var _ = Describe("Functional Tests", func() {
 		if v, ok := os.LookupEnv("TEST_STORAGE"); ok && v == "mysql" {
 			dbData = cmd.Mysql{}
 			dbData.Host, ok = os.LookupEnv("MYSQL_HOST")
+			Expect(ok).To(BeTrue(), "MYSQL_HOST must be set for this test")
 			dbData.Name, ok = os.LookupEnv("MYSQL_DBNAME")
+			Expect(ok).To(BeTrue(), "MYSQL_DBNAME must be set for this test")
 			dbData.User, ok = os.LookupEnv("MYSQL_USER")
+			Expect(ok).To(BeTrue(), "MYSQL_USER must be set for this test")
 			dbData.Password, ok = os.LookupEnv("MYSQL_PASSWORD")
+			Expect(ok).To(BeTrue(), "MYSQL_PASSWORD must be set for this test")
 			err := dbData.Validate()
-			Expect(err).ToNot(HaveOccurred(), "all MYSQL_* env vars should be set in order to run tests using 'mysql' storage")
+			Expect(err).ToNot(HaveOccurred(), "all MYSQL_* env vars must be set in order to run tests using 'mysql' storage")
 			err = linkstorage.MysqlInitStorage(dbData.User, dbData.Password, dbData.Host, dbData.Name, true)
 			Expect(err).ToNot(HaveOccurred())
 			dbh, err := linkstorage.MysqlConnect(dbData.User, dbData.Password, dbData.Host, dbData.Name)
