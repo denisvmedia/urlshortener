@@ -7,7 +7,7 @@ import (
 const namespace = "urlshortener"
 
 var (
-	// RequestProcessed defines a Promethues counter for a total of redirect requests processed (by response code)
+	// RequestProcessed defines a Prometheus counter for a total of redirect requests processed (by response code)
 	RequestProcessed = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: namespace,

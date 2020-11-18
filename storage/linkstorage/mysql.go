@@ -20,7 +20,7 @@ func NewMysqlStorage(db *sqlx.DB) Storage {
 	}
 }
 
-// NewMysqlStorage defines a storage implementation that uses MySQL
+// MysqlStorage defines a storage implementation that uses MySQL
 type MysqlStorage struct {
 	db *sqlx.DB
 }
