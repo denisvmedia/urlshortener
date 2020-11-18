@@ -4,12 +4,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const Namespace = "urlshortener"
+const namespace = "urlshortener"
 
 var (
+	// RequestProcessed defines a Promethues counter for a total of redirect requests processed (by response code)
 	RequestProcessed = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: Namespace,
+			Namespace: namespace,
 			Name:      "requests_processed_total",
 			Help:      "Number of total redirect requests processed by response code.",
 		},
@@ -17,6 +18,7 @@ var (
 	)
 )
 
+// RegisterAll registers all the app's Prometheus metrics
 func RegisterAll() {
 	prometheus.MustRegister(RequestProcessed)
 }

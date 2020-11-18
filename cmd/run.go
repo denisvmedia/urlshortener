@@ -16,19 +16,25 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
+// RegisterRunCommand registers `run` command
 func RegisterRunCommand(parser *flags.Parser) *RunCommand {
 	cmd := &RunCommand{}
-	parser.AddCommand("run", "runs url shortener web server daemon", "", cmd)
+	_, err := parser.AddCommand("run", "runs url shortener web server daemon", "", cmd)
+	if err != nil {
+		panic(err)
+	}
 	return cmd
 }
 
+// RunCommand defines `run` command
 type RunCommand struct {
 	BindAddress string `long:"bind-address" description:"http bind address" default:":31456" env:"BIND_ADDRESS"`
 	Storage     string `long:"storage" description:"storage to use" choice:"mysql" choice:"inmemory" default:"inmemory" env:"STORAGE"`
 	Mysql
 }
 
-func (cmd *RunCommand) Execute(args []string) error {
+// Execute implements `run` command
+func (cmd *RunCommand) Execute(_ []string) error {
 	var linkStorage linkstorage.Storage
 	if cmd.Storage == "mysql" {
 		if err := cmd.Mysql.Validate(); err != nil {

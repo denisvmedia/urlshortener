@@ -11,6 +11,7 @@ const (
 	pageSizeMax       = 1000
 )
 
+// Page holds page number and page size used in pagination
 type Page struct {
 	Number int
 	Size   int

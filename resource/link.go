@@ -18,14 +18,15 @@ type LinkResource struct {
 	validator   *validator.Validate
 }
 
+// NewLinkResource creates a new LinkResource instance for a given link storage
 func NewLinkResource(linkStorage linkstorage.Storage) *LinkResource {
 	// Validator is not injected as a dependency, because it's actually an integral part of LinkResource
 	validate := validator.New()
-	err := validate.RegisterValidation("shortname", myvalidator.ValidateUrlShortName)
+	err := validate.RegisterValidation("shortname", myvalidator.ValidateURLShortName)
 	if err != nil {
 		panic(err) // this should never happen
 	}
-	err = validate.RegisterValidation("urlscheme", myvalidator.ValidateUrlScheme)
+	err = validate.RegisterValidation("urlscheme", myvalidator.ValidateURLScheme)
 	if err != nil {
 		panic(err) // this should never happen
 	}
@@ -51,7 +52,7 @@ func (c *LinkResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 
 	links, total, err := c.LinkStorage.PaginatedGetAll(pagination.Number, pagination.Size)
 	if err != nil {
-		return nil, HttpErrorPtrWithStatus(err, internalServerError)
+		return nil, HTTPErrorPtrWithStatus(err, internalServerError)
 	}
 
 	result := &api2go.Response{
@@ -79,9 +80,9 @@ func (c *LinkResource) FindOne(ID string, _ api2go.Request) (api2go.Responder, e
 	res, err := c.LinkStorage.GetOne(ID)
 	if err != nil {
 		if err == storage.ErrNotFound {
-			return nil, HttpErrorPtrWithStatus(err, resourceNotFound)
+			return nil, HTTPErrorPtrWithStatus(err, resourceNotFound)
 		}
-		return nil, HttpErrorPtrWithStatus(err, internalServerError)
+		return nil, HTTPErrorPtrWithStatus(err, internalServerError)
 	}
 	return &Response{Res: res}, nil
 }
@@ -98,17 +99,17 @@ func (c *LinkResource) FindOne(ID string, _ api2go.Request) (api2go.Responder, e
 func (c *LinkResource) Create(obj interface{}, _ api2go.Request) (api2go.Responder, error) {
 	link, ok := obj.(model.Link)
 	if !ok {
-		return nil, HttpErrorPtrWithStatus(errors.New("Invalid instance given"), "")
+		return nil, HTTPErrorPtrWithStatus(errors.New("Invalid instance given"), "")
 	}
 
 	if err := c.validator.Struct(link); err != nil {
-		return nil, HttpErrorPtrWithStatus(err, validationError)
+		return nil, HTTPErrorPtrWithStatus(err, validationError)
 	}
 
 	link.FillDefaults()
 	newLink, err := c.LinkStorage.Insert(link)
 	if err != nil {
-		return nil, HttpErrorPtrWithStatus(err, errors.Cause(err).Error())
+		return nil, HTTPErrorPtrWithStatus(err, errors.Cause(err).Error())
 	}
 	return &Response{Res: newLink, Code: http.StatusCreated}, nil
 }
@@ -125,7 +126,7 @@ func (c *LinkResource) Create(obj interface{}, _ api2go.Request) (api2go.Respond
 func (c *LinkResource) Delete(id string, _ api2go.Request) (api2go.Responder, error) {
 	err := c.LinkStorage.Delete(id)
 	if err != nil {
-		return nil, HttpErrorPtrWithStatus(err, resourceNotFound)
+		return nil, HTTPErrorPtrWithStatus(err, resourceNotFound)
 	}
 	return &Response{Code: http.StatusNoContent}, nil
 }
@@ -146,19 +147,19 @@ func (c *LinkResource) Update(obj interface{}, _ api2go.Request) (api2go.Respond
 		var linkPtr *model.Link
 		linkPtr, ok = obj.(*model.Link)
 		if !ok {
-			return nil, HttpErrorPtrWithStatus(errors.New("Invalid instance given"), "")
+			return nil, HTTPErrorPtrWithStatus(errors.New("Invalid instance given"), "")
 		}
 		link = *linkPtr
 	}
 
 	if err := c.validator.Struct(link); err != nil {
-		return nil, HttpErrorPtrWithStatus(err, validationError)
+		return nil, HTTPErrorPtrWithStatus(err, validationError)
 	}
 
 	link.FillDefaults()
 	err := c.LinkStorage.Update(link)
 	if err != nil {
-		return nil, HttpErrorPtrWithStatus(err, resourceNotFound)
+		return nil, HTTPErrorPtrWithStatus(err, resourceNotFound)
 	}
 
 	return &Response{Res: link, Code: http.StatusOK}, nil

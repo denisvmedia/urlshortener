@@ -12,8 +12,8 @@ const blackListedValuesString = "^(api|swagger|metrics)$"
 var urlShortNameRegex = regexp.MustCompile(urlShortNameString)
 var blackListedValuesRegex = regexp.MustCompile(blackListedValuesString)
 
-// ValidateUrlShortName implements validator.Func
-func ValidateUrlShortName(fl validator.FieldLevel) bool {
+// ValidateURLShortName implements validator.Func
+func ValidateURLShortName(fl validator.FieldLevel) bool {
 	v := fl.Field().String()
 	if v == "" {
 		return true
@@ -27,8 +27,8 @@ func ValidateUrlShortName(fl validator.FieldLevel) bool {
 	return urlShortNameRegex.MatchString(v)
 }
 
-// ValidateUrlScheme implements validator.Func
-func ValidateUrlScheme(fl validator.FieldLevel) bool {
+// ValidateURLScheme implements validator.Func
+func ValidateURLScheme(fl validator.FieldLevel) bool {
 	v := fl.Field().String()
 	if v == "" {
 		return true

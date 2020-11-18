@@ -60,32 +60,4 @@ jobs:
       uses: codecov/codecov-action@v1
 
     - name: Run Vet & Lint
-      run: |
-        go vet .
-        go get -u golang.org/x/lint/golint
-        golint -set_exit_status=1 ./...
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.15
-      id: go
-
-    - uses: actions/checkout@v2
-
-    - name: Build
-      run: go build -v -o urlshortener .
-
-    - name: Tar Files
-      run: tar -czvf latest-linux-amd64.tar.gz urlshortener
-
-    - name: 'Upload Linux x64 Release'
-      uses: actions/upload-artifact@v2
-      with:
-        name: latest-linux-amd64-build
-        path: latest-linux-amd64.tar.gz
+      run: go vet .
