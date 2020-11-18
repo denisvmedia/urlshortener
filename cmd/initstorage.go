@@ -5,6 +5,7 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
+// RegisterInitStorageCommand registers `init-storage` command
 func RegisterInitStorageCommand(parser *flags.Parser) *InitStorageCommand {
 	cmd := &InitStorageCommand{}
 	_, err := parser.AddCommand("init-storage", "initializes the selected storage", "", cmd)
@@ -14,13 +15,15 @@ func RegisterInitStorageCommand(parser *flags.Parser) *InitStorageCommand {
 	return cmd
 }
 
+// InitStorageCommand defines `init-storage` command
 type InitStorageCommand struct {
 	Storage        string `long:"storage" description:"storage to use" choice:"mysql" default:"mysql" env:"STORAGE"`
 	CreateDatabase bool   `long:"create-database" description:"will DROP (!) and create the database, use CAREFULLY!"`
 	Mysql
 }
 
-func (cmd *InitStorageCommand) Execute(args []string) error {
+// Execute implements `init-storage` command
+func (cmd *InitStorageCommand) Execute(_ []string) error {
 	if err := cmd.Mysql.Validate(); err != nil {
 		return err
 	}
