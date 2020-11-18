@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/denisvmedia/urlshortener/cmd"
+	"github.com/denisvmedia/urlshortener/server"
 	"github.com/denisvmedia/urlshortener/shortener"
 	"github.com/denisvmedia/urlshortener/storage/linkstorage"
 	"github.com/labstack/echo/v4"
@@ -16,20 +17,17 @@ import (
 	"sync"
 
 	"github.com/denisvmedia/urlshortener/model"
-	"github.com/denisvmedia/urlshortener/resource"
-	"github.com/go-extras/api2go"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Functional Tests", func() {
-	var api *api2go.API
+	var apiHandler http.Handler
 	var linkStorage linkstorage.Storage
 	var dbData cmd.Mysql // a little bit ugly borrowing this structure from `cmd`, but it works...
 
 	BeforeEach(func() {
 		log.SetOutput(ioutil.Discard)
-		api = api2go.NewAPIWithBaseURL("api", "")
 		if v, ok := os.LookupEnv("TEST_STORAGE"); ok && v == "mysql" {
 			dbData = cmd.Mysql{}
 			dbData.Host, ok = os.LookupEnv("MYSQL_HOST")
@@ -50,7 +48,7 @@ var _ = Describe("Functional Tests", func() {
 		} else {
 			linkStorage = linkstorage.NewInMemoryStorage()
 		}
-		api.AddResource(model.Link{}, resource.NewLinkResource(linkStorage))
+		apiHandler = server.NewEcho(linkStorage).Server.Handler
 	})
 
 	AfterEach(func() {
@@ -112,7 +110,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/my-super-puper/url?withArgs=val%20with%20space#and-hash",
 					"And some cool comment",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusCreated))
 				Expect(rec.Body.String()).To(MatchJSON(`
 			{
@@ -136,7 +134,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/another-link",
 					"", // empty comment, why not
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusCreated))
 				Expect(rec.Body.String()).To(MatchJSON(`
 			{
@@ -160,7 +158,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/and-another-link",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusCreated))
 				m := make(map[string]interface{})
 				err := json.Unmarshal(rec.Body.Bytes(), &m)
@@ -178,7 +176,7 @@ var _ = Describe("Functional Tests", func() {
 					"not a valid url",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusBadRequest))
 			})
 
@@ -189,7 +187,7 @@ var _ = Describe("Functional Tests", func() {
 					"not a valid url",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusBadRequest))
 			})
 
@@ -200,7 +198,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/valid-url",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusBadRequest))
 			})
 
@@ -209,7 +207,7 @@ var _ = Describe("Functional Tests", func() {
 				data := []byte(`invalid json{}`)
 				req, err := http.NewRequest("POST", "/api/links", bytes.NewReader(data))
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotAcceptable))
 			})
 
@@ -223,7 +221,7 @@ var _ = Describe("Functional Tests", func() {
 			}`)
 				req, err := http.NewRequest("POST", "/api/links", bytes.NewReader(data))
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotAcceptable))
 			})
 		})
@@ -236,7 +234,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/my-cool-link",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusCreated))
 			})
 
@@ -247,7 +245,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/my-another-link",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusCreated))
 			})
 
@@ -260,7 +258,7 @@ var _ = Describe("Functional Tests", func() {
 					"add a comment",
 				)
 
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusOK))
 				Expect(rec.Body.String()).To(MatchJSON(`
 			{
@@ -285,7 +283,7 @@ var _ = Describe("Functional Tests", func() {
 					"invalid url",
 					"add a comment",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusBadRequest))
 			})
 
@@ -297,7 +295,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/my-updated-cool-link",
 					"add a comment",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusBadRequest))
 			})
 
@@ -309,7 +307,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/my-updated-cool-link",
 					"add a comment",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusBadRequest))
 			})
 
@@ -322,7 +320,7 @@ var _ = Describe("Functional Tests", func() {
 					"add a comment",
 				)
 				req.URL.Path = "/api/links/1"
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusConflict))
 			})
 
@@ -331,7 +329,7 @@ var _ = Describe("Functional Tests", func() {
 				data := []byte(`invalid json{}`)
 				req, err := http.NewRequest("PATCH", "/api/links/1", bytes.NewReader(data))
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotAcceptable))
 			})
 
@@ -345,7 +343,7 @@ var _ = Describe("Functional Tests", func() {
 			}`)
 				req, err := http.NewRequest("PATCH", "/api/links/1", bytes.NewReader(data))
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotAcceptable))
 			})
 		})
@@ -358,7 +356,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/my-cool-link",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusCreated))
 			})
 
@@ -366,7 +364,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("GET", "/api/links/1", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusOK))
 				Expect(rec.Body.String()).To(MatchJSON(`
 			{
@@ -387,13 +385,13 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("GET", "/api/links/100500", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotFound))
 
 				rec = httptest.NewRecorder()
 				req, err = http.NewRequest("GET", "/api/links/missing-link", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotFound))
 			})
 		})
@@ -403,7 +401,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("GET", "/api/links", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusOK))
 				Expect(rec.Body.String()).To(MatchJSON(`
 			{
@@ -425,7 +423,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/my-cool-link",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusCreated))
 			})
 
@@ -433,7 +431,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("GET", "/api/links", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusOK))
 				Expect(rec.Body.String()).To(MatchJSON(`
 			{
@@ -469,7 +467,7 @@ var _ = Describe("Functional Tests", func() {
 							fmt.Sprintf("https://example.com/my-cool-link-%d", i),
 							fmt.Sprintf("and now with a comment #%d", i),
 						)
-						api.Handler().ServeHTTP(rec, req)
+						apiHandler.ServeHTTP(rec, req)
 						Expect(rec.Code).To(Equal(http.StatusCreated))
 						wg.Done()
 					}(i)
@@ -481,7 +479,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("GET", "/api/links?page[number]=2", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusOK))
 
 				m := make(map[string]interface{})
@@ -503,7 +501,7 @@ var _ = Describe("Functional Tests", func() {
 					"https://example.com/my-cool-link",
 					"",
 				)
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusCreated))
 			})
 
@@ -511,7 +509,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("DELETE", "/api/links/1", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNoContent))
 			})
 
@@ -519,7 +517,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("GET", "/api/links/1", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotFound))
 			})
 
@@ -527,7 +525,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("DELETE", "/api/links/1", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotFound))
 			})
 
@@ -542,7 +540,7 @@ var _ = Describe("Functional Tests", func() {
 							fmt.Sprintf("https://example.com/my-cool-link-%d", i),
 							fmt.Sprintf("and now with a comment #%d", i),
 						)
-						api.Handler().ServeHTTP(rec, req)
+						apiHandler.ServeHTTP(rec, req)
 						Expect(rec.Code).To(Equal(http.StatusCreated))
 						wg.Done()
 					}(i)
@@ -565,7 +563,7 @@ var _ = Describe("Functional Tests", func() {
 						rec := httptest.NewRecorder()
 						req, err := http.NewRequest("DELETE", fmt.Sprintf("/api/links/%s", id), nil)
 						Expect(err).ToNot(HaveOccurred())
-						api.Handler().ServeHTTP(rec, req)
+						apiHandler.ServeHTTP(rec, req)
 						Expect(rec.Code).To(Equal(http.StatusNoContent))
 						wg.Done()
 					}(id)
@@ -577,7 +575,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("GET", "/api/links", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusOK))
 
 				m := make(map[string]interface{})
@@ -594,7 +592,7 @@ var _ = Describe("Functional Tests", func() {
 				rec := httptest.NewRecorder()
 				req, err := http.NewRequest("DELETE", "/api/links/100500", nil)
 				Expect(err).ToNot(HaveOccurred())
-				api.Handler().ServeHTTP(rec, req)
+				apiHandler.ServeHTTP(rec, req)
 				Expect(rec.Code).To(Equal(http.StatusNotFound))
 			})
 		})
