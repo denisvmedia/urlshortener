@@ -4,13 +4,11 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/jsonapi.Link'
-        type: object
     type: object
   jsonapi.CreatedLink:
     properties:
       data:
         $ref: '#/definitions/jsonapi.Link'
-        type: object
       meta:
         type: object
     type: object
@@ -18,7 +16,6 @@ definitions:
     properties:
       attributes:
         $ref: '#/definitions/model.Link'
-        type: object
       id:
         description: Object ID - this field is ignored for the new objects, and must match the url for the existing objects.
         example: "1"
@@ -100,6 +97,7 @@ paths:
       - default: 10
         description: Page size
         in: query
+        maximum: 1000
         name: page[size]
         type: integer
       produces:

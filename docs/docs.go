@@ -54,6 +54,7 @@ var doc = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 1000,
                         "type": "integer",
                         "default": 10,
                         "description": "Page size",
@@ -205,7 +206,6 @@ var doc = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "type": "object",
                     "$ref": "#/definitions/jsonapi.Link"
                 }
             }
@@ -214,7 +214,6 @@ var doc = `{
             "type": "object",
             "properties": {
                 "data": {
-                    "type": "object",
                     "$ref": "#/definitions/jsonapi.Link"
                 },
                 "meta": {
@@ -226,7 +225,6 @@ var doc = `{
             "type": "object",
             "properties": {
                 "attributes": {
-                    "type": "object",
                     "$ref": "#/definitions/model.Link"
                 },
                 "id": {
