@@ -21,7 +21,7 @@ var _ = Describe("Functional Tests", func() {
 		linkStorage = linkstorage.NewInMemoryStorage()
 		_, err := linkStorage.Insert(model.Link{
 			ShortName:   "my-cool-link",
-			OriginalUrl: "https://example.com/my-cool-link",
+			OriginalURL: "https://example.com/my-cool-link",
 		})
 		Expect(err).ToNot(HaveOccurred())
 		handler = shortener.Handler(linkStorage)

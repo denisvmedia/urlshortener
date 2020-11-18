@@ -7,13 +7,13 @@ import (
 // Link is an object that holds link information like name, url, etc.
 type Link struct {
 	// Object ID - this field is ignored for the new objects, and must match the url for the existing objects.
-	Id string `json:"id" example:"1"`
+	ID string `json:"id" example:"1"`
 	// JSON:API type
 	Type       string     `json:"type" example:"links"`
 	Attributes model.Link `json:"attributes"`
 }
 
-// Link is an object that holds link list information
+// Links is an object that holds link list information
 type Links struct {
 	Data []Link `json:"data"`
 	Meta struct {

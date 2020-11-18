@@ -80,7 +80,7 @@ func (m *MysqlStorage) PaginatedGetAll(pageNumber, pageSize int) (results []*mod
 		results = append(results, &model.Link{
 			ID:          fmt.Sprint(idNew),
 			ShortName:   shortNameNew,
-			OriginalUrl: originalUrl,
+			OriginalURL: originalUrl,
 			Comment:     comment,
 		})
 	}
@@ -116,7 +116,7 @@ func (m *MysqlStorage) GetOne(id string) (*model.Link, error) {
 	return &model.Link{
 		ID:          fmt.Sprint(idNew),
 		ShortName:   shortNameNew,
-		OriginalUrl: originalUrl,
+		OriginalURL: originalUrl,
 		Comment:     comment,
 	}, nil
 }
@@ -149,7 +149,7 @@ func (m *MysqlStorage) GetOneByShortName(shortName string) (*model.Link, error) 
 	return &model.Link{
 		ID:          fmt.Sprint(id),
 		ShortName:   shortNameNew,
-		OriginalUrl: originalUrl,
+		OriginalURL: originalUrl,
 		Comment:     comment,
 	}, nil
 }
@@ -171,7 +171,7 @@ func (m *MysqlStorage) Insert(c model.Link) (*model.Link, error) {
 	defer stmt.Close()
 
 	created := time.Now()
-	result, err := stmt.Exec(c.ShortName, c.OriginalUrl, c.Comment, created, created)
+	result, err := stmt.Exec(c.ShortName, c.OriginalURL, c.Comment, created, created)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (m *MysqlStorage) Update(c model.Link) error {
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(c.ShortName, c.OriginalUrl, c.Comment, time.Now(), c.ID)
+	result, err := stmt.Exec(c.ShortName, c.OriginalURL, c.Comment, time.Now(), c.ID)
 	if err != nil {
 		return err
 	}

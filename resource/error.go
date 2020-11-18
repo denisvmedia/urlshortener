@@ -18,6 +18,7 @@ var errorCodes = map[interface{}]int{
 	storage.ErrShortNameAlreadyExists: http.StatusBadRequest,
 }
 
+// StatusByError gives a http error for a particular go error
 func StatusByError(err error) int {
 	if _, ok := err.(validator.ValidationErrors); ok {
 		return http.StatusBadRequest
@@ -31,6 +32,9 @@ func StatusByError(err error) int {
 	return status
 }
 
+// HttpErrorPtr makes an *api2go.HTTPError by the given function arguments,
+// where err is an error that had occurred, msg is a text that you might want to show to the visitor,
+// status is a http status you want to return along with the error message
 func HttpErrorPtr(err error, msg string, status int) *api2go.HTTPError {
 	if status == 500 {
 		msg = internalServerError
@@ -49,6 +53,8 @@ func HttpErrorPtr(err error, msg string, status int) *api2go.HTTPError {
 	return &tmp
 }
 
+// HttpErrorPtrWithStatus is a shortcut to HttpErrorPtr that uses
+// StatusByError for the given error to define the http status
 func HttpErrorPtrWithStatus(err error, msg string) *api2go.HTTPError {
 	return HttpErrorPtr(err, msg, StatusByError(err))
 }

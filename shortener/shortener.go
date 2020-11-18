@@ -59,7 +59,7 @@ func Handler(linkStorage linkstorage.Storage) echo.HandlerFunc {
 		link, err := linkStorage.GetOneByShortName(shortName)
 		if err == nil {
 			metrics.RequestProcessed.WithLabelValues("301").Inc()
-			return ctx.Redirect(http.StatusMovedPermanently, link.OriginalUrl)
+			return ctx.Redirect(http.StatusMovedPermanently, link.OriginalURL)
 		}
 
 		contentType := httputil.NegotiateContentType(ctx.Request(), []string{"text/plain", "text/html", "application/json", "application/vnd.api+json"}, "")
