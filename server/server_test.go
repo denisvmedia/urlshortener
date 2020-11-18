@@ -1,14 +1,9 @@
-package main_test
+package server_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/denisvmedia/urlshortener/cmd"
-	"github.com/denisvmedia/urlshortener/server"
-	"github.com/denisvmedia/urlshortener/shortener"
-	"github.com/denisvmedia/urlshortener/storage/linkstorage"
-	"github.com/labstack/echo/v4"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -16,7 +11,13 @@ import (
 	"os"
 	"sync"
 
+	"github.com/denisvmedia/urlshortener/cmd"
 	"github.com/denisvmedia/urlshortener/model"
+	"github.com/denisvmedia/urlshortener/server"
+	"github.com/denisvmedia/urlshortener/shortener"
+	"github.com/denisvmedia/urlshortener/storage/linkstorage"
+	"github.com/labstack/echo/v4"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
