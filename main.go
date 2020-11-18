@@ -35,6 +35,4 @@ func main() {
 	if err != nil {
 		os.Exit(-1)
 	}
-
-	return
 }
