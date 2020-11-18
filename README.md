@@ -1,6 +1,11 @@
 
 # Url Shortener Demo
 
+[![GitHub license](https://img.shields.io/github/license/denisvmedia/urlshortener)](https://github.com/denisvmedia/urlshortener/blob/master/LICENSE)
+[![Build](https://github.com/denisvmedia/urlshortener/workflows/Go/badge.svg)](https://github.com/denisvmedia/urlshortener/actions?query=workflow%3AGo)
+[![Go Report Card](https://goreportcard.com/badge/github.com/denisvmedia/urlshortener)](https://goreportcard.com/report/github.com/denisvmedia/urlshortener)
+[![Coverage Status](https://img.shields.io/codecov/c/github/denisvmedia/urlshortener/master.svg)](https://codecov.io/gh/denisvmedia/urlshortener)
+
 This is a demo how to build a simple URL shortener with go.
 
 ## Prerequisites
