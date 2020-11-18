@@ -63,7 +63,7 @@ jobs:
       run: |
         go vet .
         go get -u golang.org/x/lint/golint
-        golint -set_exit_status=1 .
+        golint -set_exit_status=1 ./...
 
   build:
     name: Build
