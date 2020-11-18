@@ -31,11 +31,12 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - name: Install ginkgo
-      run: go get github.com/onsi/ginkgo/ginkgo
+    #- name: Install ginkgo
+    #  run: go get github.com/onsi/ginkgo/ginkgo
 
     - name: Test with In-Memory Storage
-      run: ginkgo -race -progress -r
+      #run: ginkgo -race -progress -r
+      run: go test -v  -coverprofile=coverage1.txt -covermode=atomic ./...
 
     - name: Test with MariaDB Storage
       env:
@@ -44,7 +45,25 @@ jobs:
         MYSQL_DBNAME: shortener_db
         MYSQL_USER: root
         MYSQL_PASSWORD: '12345678'
-      run: ginkgo -race -progress -r
+      #run: ginkgo -race -progress -r
+      run: go test -v  -coverprofile=coverage2.txt -covermode=atomic ./...
+
+    - name: Install gocovmerge
+      run: go get -u github.com/wadey/gocovmerge
+    
+    - name: Combine coverage results
+      run: |
+        gocovmerge coverage1.txt coverage2.txt > coverage.txt
+        rm coverage1.txt coverage2.txt
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+
+    - name: Run Vet & Lint
+      run: |
+        go vet .
+        go get -u golang.org/x/lint/golint
+        golint -set_exit_status=1 .
 
   build:
     name: Build

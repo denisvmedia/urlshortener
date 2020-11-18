@@ -19,7 +19,8 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/swaggo/echo-swagger v1.0.0
 	github.com/swaggo/swag v1.6.7
-	golang.org/x/net v0.0.0-20200927032502-5d4f70055728 // indirect
+	github.com/wadey/gocovmerge v0.0.0-20160331181800-b5bfa59ec0ad // indirect
 	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/tools v0.0.0-20201118174508-6ed8ff9ad920
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 )
