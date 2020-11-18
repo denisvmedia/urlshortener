@@ -43,7 +43,7 @@ const pageError = `
                 <div class="col-md-10 col-md-offset-2">
                     <h1 class="error">Oops!</h1>
                     <h2>Error 404 - Not Found</h2>
-                    <p class="lead">Sorry, an error has occured. The resource you requested has not been found!</p>
+                    <p class="lead">Sorry, an error has occurred. The resource you requested has not been found!</p>
                     <a href="#" class="btn btn-primary btn-md"><span class="glyphicon glyphicon-home"></span> Home </a> <a href="#" class="btn btn-default btn-md"><span class="glyphicon glyphicon-envelope"></span> Contact </a>
                 </div>
             </div>
