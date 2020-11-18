@@ -18,7 +18,10 @@ import (
 
 func RegisterRunCommand(parser *flags.Parser) *RunCommand {
 	cmd := &RunCommand{}
-	parser.AddCommand("run", "runs url shortener web server daemon", "", cmd)
+	_, err := parser.AddCommand("run", "runs url shortener web server daemon", "", cmd)
+	if err != nil {
+		panic(err)
+	}
 	return cmd
 }
 

@@ -7,7 +7,10 @@ import (
 
 func RegisterInitStorageCommand(parser *flags.Parser) *InitStorageCommand {
 	cmd := &InitStorageCommand{}
-	parser.AddCommand("init-storage", "initializes the selected storage", "", cmd)
+	_, err := parser.AddCommand("init-storage", "initializes the selected storage", "", cmd)
+	if err != nil {
+		panic(err)
+	}
 	return cmd
 }
 
