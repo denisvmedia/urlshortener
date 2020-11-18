@@ -87,10 +87,6 @@ func (s *InMemoryStorage) Insert(c model.Link) (*model.Link, error) {
 	id := fmt.Sprintf("%d", atomic.LoadInt64(&s.idCount))
 	c.ID = id
 
-	if c.ShortName == "" {
-		c.ShortName = generateShortName()
-	}
-
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if lv, exists := s.linksByShortName[c.ShortName]; exists {
@@ -139,10 +135,6 @@ func (s *InMemoryStorage) Delete(id string) error {
 func (s *InMemoryStorage) Update(c model.Link) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-
-	if c.ShortName == "" {
-		c.ShortName = generateShortName()
-	}
 
 	_, exists := s.links[c.ID]
 	if !exists {

@@ -155,10 +155,6 @@ func (m *MysqlStorage) GetOneByShortName(shortName string) (*model.Link, error) 
 }
 
 func (m *MysqlStorage) Insert(c model.Link) (*model.Link, error) {
-	if c.ShortName == "" {
-		c.ShortName = generateShortName()
-	}
-
 	existing, err := m.GetOneByShortName(c.ShortName)
 	if err != nil && err != storage.ErrNotFound {
 		return nil, err

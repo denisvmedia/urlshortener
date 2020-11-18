@@ -75,7 +75,7 @@ func (c *LinkResource) FindAll(r api2go.Request) (api2go.Responder, error) {
 // @Param id path string true "Link ID"
 // @Success 200 {object} jsonapi.Link
 // @Router /links/{id} [get]
-func (c *LinkResource) FindOne(ID string, r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) FindOne(ID string, _ api2go.Request) (api2go.Responder, error) {
 	res, err := c.LinkStorage.GetOne(ID)
 	if err != nil {
 		if err == storage.ErrNotFound {
@@ -95,7 +95,7 @@ func (c *LinkResource) FindOne(ID string, r api2go.Request) (api2go.Responder, e
 // @Param link body jsonapi.CreateLink true "Add link"
 // @Success 201 {object} jsonapi.CreatedLink
 // @Router /links [post]
-func (c *LinkResource) Create(obj interface{}, r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) Create(obj interface{}, _ api2go.Request) (api2go.Responder, error) {
 	link, ok := obj.(model.Link)
 	if !ok {
 		return nil, HttpErrorPtrWithStatus(errors.New("Invalid instance given"), "")
@@ -105,6 +105,7 @@ func (c *LinkResource) Create(obj interface{}, r api2go.Request) (api2go.Respond
 		return nil, HttpErrorPtrWithStatus(err, validationError)
 	}
 
+	link.FillDefaults()
 	newLink, err := c.LinkStorage.Insert(link)
 	if err != nil {
 		return nil, HttpErrorPtrWithStatus(err, errors.Cause(err).Error())
@@ -121,7 +122,7 @@ func (c *LinkResource) Create(obj interface{}, r api2go.Request) (api2go.Respond
 // @Param  id path int true "Link ID"
 // @Success 204
 // @Router /links/{id} [delete]
-func (c *LinkResource) Delete(id string, r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) Delete(id string, _ api2go.Request) (api2go.Responder, error) {
 	err := c.LinkStorage.Delete(id)
 	if err != nil {
 		return nil, HttpErrorPtrWithStatus(err, resourceNotFound)
@@ -139,7 +140,7 @@ func (c *LinkResource) Delete(id string, r api2go.Request) (api2go.Responder, er
 // @Param  account body jsonapi.CreateLink true "Update link"
 // @Success 200 {object} jsonapi.CreatedLink
 // @Router /links/{id} [patch]
-func (c *LinkResource) Update(obj interface{}, r api2go.Request) (api2go.Responder, error) {
+func (c *LinkResource) Update(obj interface{}, _ api2go.Request) (api2go.Responder, error) {
 	link, ok := obj.(model.Link)
 	if !ok {
 		var linkPtr *model.Link
@@ -154,6 +155,7 @@ func (c *LinkResource) Update(obj interface{}, r api2go.Request) (api2go.Respond
 		return nil, HttpErrorPtrWithStatus(err, validationError)
 	}
 
+	link.FillDefaults()
 	err := c.LinkStorage.Update(link)
 	if err != nil {
 		return nil, HttpErrorPtrWithStatus(err, resourceNotFound)

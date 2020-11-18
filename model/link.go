@@ -20,3 +20,9 @@ func (c *Link) SetID(id string) error {
 	c.ID = id
 	return nil
 }
+
+func (c *Link) FillDefaults() {
+	if c.ShortName == "" {
+		c.ShortName = generateShortName()
+	}
+}
